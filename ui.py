@@ -7,10 +7,11 @@ from tkinter import ttk
 from typing import Callable
 
 from motion import BounceSource, ManualSource, OrbitSource
+from motion_presets import MOTION_KINDS, MotionPresetSource
 from network import AUTO_LABEL, list_interfaces
 from sender import SenderThread, start_sender
 from state import (
-    DEFAULT_PORTS, MODE_BOUNCE, MODE_MANUAL, MODE_ORBIT, PROTO_FREED, PROTO_OPENTRACKIO, AppState,
+    DEFAULT_PORTS, MODE_BOUNCE, MODE_MANUAL, MODE_MOTION, MODE_ORBIT, PROTO_FREED, PROTO_OPENTRACKIO, AppState,
 )
 
 APP_TITLE = "MotionJoy Tracking Generator"
@@ -198,8 +199,30 @@ class App(tk.Tk):
         frame = ttk.Frame(self._container, padding=(6, 0))
         frame.pack(fill="x")
         self.mode_var = tk.StringVar(value=MODE_MANUAL)
-        for text, value in [("Manual", MODE_MANUAL), ("Orbit", MODE_ORBIT), ("Bounce", MODE_BOUNCE)]:
+        for text, value in [("Manual", MODE_MANUAL), ("Orbit", MODE_ORBIT), ("Bounce", MODE_BOUNCE), ("Motion", MODE_MOTION)]:
             ttk.Radiobutton(frame, text=text, value=value, variable=self.mode_var, command=self._on_mode_change).pack(side="left", padx=6)
+        self._build_motion_row()
+
+    def _build_motion_row(self) -> None:
+        frame = ttk.Frame(self._container, padding=(6, 0))
+        frame.pack(fill="x")
+        ttk.Label(frame, text="Move").pack(side="left", padx=6)
+        self.motion_kind_var = tk.StringVar(value=self.state_.motion_kind)
+        menu = ttk.Combobox(frame, textvariable=self.motion_kind_var,
+                            values=list(MOTION_KINDS), width=14, state="readonly")
+        menu.pack(side="left", padx=6)
+        menu.bind("<<ComboboxSelected>>", lambda *_: self.state_.set_motion(kind=self.motion_kind_var.get()))
+        ttk.Label(frame, text="Dolly distance (m)").pack(side="left", padx=(16, 4))
+        self.dolly_distance_var = tk.StringVar(value=f"{self.state_.dolly_distance:.1f}")
+        entry = ttk.Entry(frame, textvariable=self.dolly_distance_var, width=7)
+        entry.pack(side="left", padx=4)
+        def _commit(_e=None):
+            try:
+                self.state_.set_motion(dolly_distance=float(self.dolly_distance_var.get()))
+            except ValueError:
+                pass
+        entry.bind("<Return>", _commit)
+        entry.bind("<FocusOut>", _commit)
 
     def _build_field_group(self, title: str, fields, *, bounceable: bool) -> None:
         outer = ttk.LabelFrame(self._container, text=title, padding=6)
@@ -384,6 +407,7 @@ class App(tk.Tk):
             MODE_MANUAL: ManualSource(self.state_),
             MODE_ORBIT: OrbitSource(self.state_, interval=interval),
             MODE_BOUNCE: BounceSource(self.state_),
+            MODE_MOTION: MotionPresetSource(self.state_, interval=interval, kind=self.state_.motion_kind),
         }
 
         self.sender = start_sender(

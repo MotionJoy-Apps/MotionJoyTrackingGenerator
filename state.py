@@ -29,6 +29,7 @@ DEFAULT_PORTS = {PROTO_OPENTRACKIO: 4242, PROTO_FREED: 40000}
 MODE_MANUAL = "manual"
 MODE_ORBIT = "orbit"
 MODE_BOUNCE = "bounce"
+MODE_MOTION = "motion"
 
 
 @dataclass
@@ -49,7 +50,11 @@ class AppState:
         self.freed_camera_id = 1
         self.local_ip = ""  # "" = let the OS pick the outbound interface
         self.rate = 60.0
+        self.motion_kind = "dolly-front"
+        self.dolly_distance = 5.0
         self.mode = MODE_MANUAL
+        self.motion_kind = "dolly-front"
+        self.dolly_distance = 5.0
 
         self.manual = PoseLensSample()
         self.ranges: dict[str, FieldRange] = {name: FieldRange() for name in BOUNCE_FIELDS}
@@ -82,6 +87,14 @@ class AppState:
                 r.to_value = to_value
             if step is not None:
                 r.step = step
+
+    def set_motion(self, *, kind: str | None = None,
+                   dolly_distance: float | None = None) -> None:
+        with self._lock:
+            if kind is not None:
+                self.motion_kind = kind
+            if dolly_distance is not None:
+                self.dolly_distance = max(0.5, min(50.0, dolly_distance))
 
     def set_last_sample(self, sample: PoseLensSample, seq: int, timecode: str) -> None:
         with self._lock:

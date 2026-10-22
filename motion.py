@@ -4,6 +4,8 @@ Each source exposes ``tick() -> PoseLensSample``. OrbitSource is a
 pure-Python (no numpy) orbiting-camera-looking-at-origin
 animation, expressed in metres as OpenTrackIO requires. BounceSource is a
 triangle-wave auto-sweep between per-field bounds.
+motion_presets.py adds rig-move presets (dolly, crane, handheld)
+built on the same look-at math.
 """
 
 from __future__ import annotations
@@ -141,7 +143,7 @@ class OrbitSource:
             right = _vec_normalize(right)
         up = _vec_cross(forward, right)
 
-        rot = _mat3_from_cols(right, up, forward)
+        rot = _mat3_from_cols(forward, right, up)
         rx, ry, rz = _matrix_to_euler_zyx(rot)
         pan = math.degrees(rz)
         tilt = math.degrees(ry)
