@@ -149,6 +149,9 @@ class OrbitSource:
         tilt = math.degrees(ry)
         roll = math.degrees(rx)
 
+        # Orbit and dolly-family headings keep the camera level, so the
+        # look-at math yields no roll; forward the value the user dialed
+        # into the Manual roll field instead of squashing it to 0.
         manual = self._state.snapshot_manual()
         return replace(
             manual,
@@ -157,7 +160,6 @@ class OrbitSource:
             trans_z=z,
             pan=pan,
             tilt=tilt,
-            roll=roll,
         )
 
 

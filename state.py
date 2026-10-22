@@ -50,8 +50,6 @@ class AppState:
         self.freed_camera_id = 1
         self.local_ip = ""  # "" = let the OS pick the outbound interface
         self.rate = 60.0
-        self.motion_kind = "dolly-front"
-        self.dolly_distance = 5.0
         self.mode = MODE_MANUAL
         self.motion_kind = "dolly-front"
         self.dolly_distance = 5.0

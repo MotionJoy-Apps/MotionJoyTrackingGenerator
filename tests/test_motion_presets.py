@@ -121,3 +121,24 @@ class TestMotionPresets(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RollBehaviorTests(unittest.TestCase):
+    def test_orbit_passes_manual_roll(self):
+        st = AppState()
+        st.set_manual_field("roll", 10.0)
+        src = OrbitSource(st, interval=1 / 60)
+        rolls = [src.tick().roll for _ in range(120)]
+        self.assertTrue(all(r == 10.0 for r in rolls))
+
+    def test_orbit_roll_zero_by_default(self):
+        src = OrbitSource(AppState(), interval=1 / 60)
+        rolls = [src.tick().roll for _ in range(60)]
+        self.assertTrue(all(r == 0.0 for r in rolls))
+
+    def test_handheld_jitter_includes_roll(self):
+        st = AppState()
+        st.motion_kind = "handheld"
+        src = MotionPresetSource(st, kind="handheld", interval=1 / 60)
+        rolls = [src.tick().roll for _ in range(240)]
+        self.assertGreater(max(abs(r) for r in rolls), 0.1)
