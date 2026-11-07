@@ -134,6 +134,7 @@ class App(tk.Tk):
         self.state_.mode = MODE_MANUAL
         self._build_connection_row()
         self._build_mode_row()
+        self._update_motion_kind_menu_state()
         for label, fields in BOUNCEABLE_GROUPS:
             self._build_field_group(label, fields, bounceable=True)
         if PROTO_OPENTRACKIO in self.state_.enabled:
@@ -208,10 +209,11 @@ class App(tk.Tk):
         frame.pack(fill="x")
         ttk.Label(frame, text="Move").pack(side="left", padx=6)
         self.motion_kind_var = tk.StringVar(value=self.state_.motion_kind)
-        menu = ttk.Combobox(frame, textvariable=self.motion_kind_var,
-                            values=list(MOTION_KINDS), width=14, state="readonly")
-        menu.pack(side="left", padx=6)
-        menu.bind("<<ComboboxSelected>>", lambda *_: self.state_.set_motion(kind=self.motion_kind_var.get()))
+        self.motion_kind_menu = ttk.Combobox(frame, textvariable=self.motion_kind_var,
+                                             values=list(MOTION_KINDS), width=14, state="readonly")
+        self.motion_kind_menu.pack(side="left", padx=6)
+        self.motion_kind_menu.bind("<<ComboboxSelected>>",
+                                   lambda *_: self.state_.set_motion(kind=self.motion_kind_var.get()))
         ttk.Label(frame, text="Dolly distance (m)").pack(side="left", padx=(16, 4))
         self.dolly_distance_var = tk.StringVar(value=f"{self.state_.dolly_distance:.1f}")
         entry = ttk.Entry(frame, textvariable=self.dolly_distance_var, width=7)
@@ -329,7 +331,12 @@ class App(tk.Tk):
             enabled = mode == MODE_BOUNCE
             for e in entries:
                 e.configure(state="normal" if enabled else "disabled")
+        self._update_motion_kind_menu_state()
         self._on_mode_change_bounce_reset()
+
+    def _update_motion_kind_menu_state(self) -> None:
+        enabled = self.mode_var.get() == MODE_MOTION
+        self.motion_kind_menu.configure(state="readonly" if enabled else "disabled")
 
     def _on_mode_change_bounce_reset(self) -> None:
         # Re-instantiate the bounce source on mode entry so its internal
