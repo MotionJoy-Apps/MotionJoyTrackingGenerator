@@ -5,6 +5,9 @@ data - **OpenTrackIO**, **FreeD**, or both at once - for testing
 receivers without real tracking hardware. The OpenTrackIO stream carries
 6DOF camera pose, focus/iris/zoom and Brown-Conrady lens distortion.
 
+> **New here?** See [HOW-TO.md](HOW-TO.md) for a screen-by-screen guide to
+> running the app, the four motion modes, and the Motion presets.
+
 ## Requirements
 
 Python 3.9+ with `tkinter` (ships with most Python installs), plus
